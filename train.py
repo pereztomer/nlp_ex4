@@ -84,7 +84,7 @@ def main():
         per_device_eval_batch_size=24,
         weight_decay=0.01,
         save_total_limit=3,
-        num_train_epochs=2,
+        num_train_epochs=20,
         predict_with_generate=True,
         fp16=True,
         push_to_hub=False,
