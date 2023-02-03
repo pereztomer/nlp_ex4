@@ -1,5 +1,5 @@
 import evaluate
-
+from load_ds import load_ds
 
 def postprocess_text(preds, labels):
     preds = [pred.strip() for pred in preds]

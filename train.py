@@ -60,7 +60,7 @@ def main():
     train_dataset = Dataset.from_dict({'data': train_ds})
     val_dataset = Dataset.from_dict({'data': val_ds})
 
-    tokenizer = AutoTokenizer.from_pretrained("t5-small")
+    tokenizer = AutoTokenizer.from_pretrained("t5-large")
     preprocess_function = define_preprocess_function(source_lang=source_lang,
                                                      target_lang=target_lang,
                                                      prefix=prefix,
@@ -77,7 +77,7 @@ def main():
     compute_metrics = generate_compute_metrics(tokenizer=tokenizer, metric=sacrebleu)
 
     training_args = Seq2SeqTrainingArguments(
-        output_dir="german_english_translator_baseline",
+        output_dir="t5_large_german_english_translator",
         evaluation_strategy="epoch",
         learning_rate=2e-5,
         per_device_train_batch_size=24,
