@@ -77,7 +77,7 @@ def main():
     compute_metrics = generate_compute_metrics(tokenizer=tokenizer, metric=sacrebleu)
 
     training_args = Seq2SeqTrainingArguments(
-        output_dir="my_awesome_opus_books_model",
+        output_dir="german_english_translator_baseline",
         evaluation_strategy="epoch",
         learning_rate=2e-5,
         per_device_train_batch_size=24,
