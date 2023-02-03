@@ -86,7 +86,7 @@ def main():
         save_total_limit=3,
         num_train_epochs=2,
         predict_with_generate=True,
-        fp16=False,
+        fp16=True,
         push_to_hub=False,
     )
 
