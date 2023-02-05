@@ -1,6 +1,6 @@
 from datasets import Dataset
 from transformers import AutoTokenizer
-from load_ds import load_ds
+from load_ds import load_ds_labeled
 from transformers import AutoModelForSeq2SeqLM, Seq2SeqTrainingArguments, Seq2SeqTrainer
 from transformers import DataCollatorForSeq2Seq
 import evaluate
@@ -50,8 +50,8 @@ def define_preprocess_function(source_lang, target_lang, prefix, tokenizer):
 def main():
     train_ds_path = './data/train.labeled'
     val_ds_path = './data/val.labeled'
-    train_ds = load_ds(ds_path=train_ds_path)
-    val_ds = load_ds(ds_path=val_ds_path)
+    train_ds = load_ds_labeled(ds_path=train_ds_path)
+    val_ds = load_ds_labeled(ds_path=val_ds_path)
 
     source_lang = "gr"
     target_lang = "en"

@@ -1,4 +1,4 @@
-def load_ds(ds_path):
+def load_ds_labeled(ds_path):
     ds = []
     with open(ds_path) as my_file:
         german_flag = False
@@ -22,9 +22,30 @@ def load_ds(ds_path):
     return ds
 
 
+def load_ds_unlabeled(path):
+    ds = []
+    with open(path) as my_file:
+        for line in my_file:
+            if line == 'German:\n':
+                german_sample = []
+            elif line == '\n':
+                new_sample = {'Roots in English': roots,
+                              'Modifiers in English': modifiers,
+                              'gr': german_sample}
+                ds.append(new_sample)
+            elif 'Roots in English:' in line:
+                roots = line
+            elif 'Modifiers in English:' in line:
+                modifiers = line
+            else:
+                german_sample.append(line)
+
+    return ds
+
+
 def main():
-    train_ds_path = './data/train.labeled'
-    load_ds(ds_path=train_ds_path)
+    val_ds_path = './data/val.unlabeled'
+    ds = load_ds_unlabeled(path=val_ds_path)
 
 
 if __name__ == '__main__':
