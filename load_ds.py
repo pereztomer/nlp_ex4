@@ -1,25 +1,35 @@
-def load_ds_labeled(ds_path):
-    ds = []
-    with open(ds_path) as my_file:
-        german_flag = False
-        english_flag = False
-        for line in my_file:
-            if line == 'German:\n':
-                german_sample = ''
-                german_flag = True
-                english_flag = False
-            elif line == 'English:\n':
-                english_sample = ''
-                german_flag = False
-                english_flag = True
-            elif line == '\n':
-                new_sample = {'en': english_sample.replace('\n', ' '), 'gr': german_sample.replace('\n', ' ')}
-                ds.append(new_sample)
-            elif german_flag:
-                german_sample += line
-            elif english_flag:
-                english_sample += line
-    return ds
+from project_evaluate import read_file
+
+
+# def load_ds_labeled(ds_path):
+#     ds = []
+#     with open(ds_path) as my_file:
+#         german_flag = False
+#         english_flag = False
+#         for line in my_file:
+#             if line == 'German:\n':
+#                 german_sample = ''
+#                 german_flag = True
+#                 english_flag = False
+#             elif line == 'English:\n':
+#                 english_sample = ''
+#                 german_flag = False
+#                 english_flag = True
+#             elif line == '\n':
+#                 new_sample = {'en': english_sample.replace('\n', ' '), 'gr': german_sample.replace('\n', ' ')}
+#                 ds.append(new_sample)
+#             elif german_flag:
+#                 german_sample += line
+#             elif english_flag:
+#                 english_sample += line
+#     return ds
+
+def load_ds_labeled(file_path):
+    out_ds = []
+    ds = read_file(file_path=file_path)
+    for english_se, german_sen in zip(ds[0], ds[1]):
+        out_ds.append({'en': english_se, 'gr': german_sen})
+    return out_ds
 
 
 def load_ds_unlabeled(path):
@@ -44,8 +54,9 @@ def load_ds_unlabeled(path):
 
 
 def main():
-    val_ds_path = './data/val.unlabeled'
-    ds = load_ds_unlabeled(path=val_ds_path)
+    val_ds_path = './data/val.labeled'
+    ds = load_ds_labeled(file_path=val_ds_path)
+    print('hi')
 
 
 if __name__ == '__main__':
