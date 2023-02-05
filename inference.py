@@ -5,7 +5,7 @@ from load_ds import load_ds_unlabeled
 def main():
     new_file_path = './data/val.labeled_self_made'
     unlabeled_ds = load_ds_unlabeled(path='./data/val.unlabeled')
-    translator = pipeline("translation", model="./my_awesome_opus_books_model/checkpoint-11500")
+    translator = pipeline("translation", model="./german_english_translator_baseline/checkpoint-8000")
 
     for idx, val in enumerate(unlabeled_ds):
         sen_to_translate = "translate German to English: "
@@ -13,20 +13,16 @@ def main():
             sen_to_translate += sen
 
         val['eg'] = translator(sen_to_translate)[0]['translation_text']
-        if idx == 10:
-            break
 
     with open(new_file_path, "w") as new_file:
         for idx, val in enumerate(unlabeled_ds):
-            if idx == 10:
-                break
             new_file.write('German:\n')
             for val_2 in val['gr']:
                 new_file.write(val_2)
             new_file.write('English:\n')
             german_sen = val['eg'].split('.')
             for ger_sen in german_sen:
-                if ger_sen!='':
+                if ger_sen != '':
                     new_file.write(ger_sen + '.\n')
             new_file.write('\n')
 
