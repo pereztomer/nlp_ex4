@@ -5,14 +5,14 @@ from load_ds import load_ds_unlabeled
 def main():
     new_file_path = './data/val.labeled_self_made'
     unlabeled_ds = load_ds_unlabeled(path='./data/val.unlabeled')
-    translator = pipeline("translation", model="./german_english_translator_baseline/checkpoint-8000")
+    translator = pipeline("translation", model="./t5_small_200_max_seq_len/checkpoint-61500")
 
     for idx, val in enumerate(unlabeled_ds):
         sen_to_translate = "translate German to English: "
         for sen in val['gr']:
             sen_to_translate += sen
 
-        val['eg'] = translator(sen_to_translate)[0]['translation_text']
+        val['eg'] = translator(sen_to_translate, max_length=420)[0]['translation_text']
 
     with open(new_file_path, "w") as new_file:
         for idx, val in enumerate(unlabeled_ds):
