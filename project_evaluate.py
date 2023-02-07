@@ -43,7 +43,7 @@ def read_file(file_path):
 def calculate_score(file_path1, file_path2):
     file1_en, file1_de = read_file(file_path1)
     file2_en, file2_de = read_file(file_path2)
-    for sen1, sen2 in zip(file1_de, file2_de):
+    for idx, (sen1, sen2) in enumerate(zip(file1_de, file2_de)):
         if sen1.strip().lower() != sen2.strip().lower():
             raise ValueError('Different Sentences')
     score = compute_metrics(file1_en, file2_en)
