@@ -7,6 +7,14 @@ import evaluate
 import numpy as np
 
 
+# transformers on azure 4.6.0
+# local version: 4.2.6
+model_name = 't5-base'
+max_seq_len = 128
+run_name = f'{model_name}_{max_seq_len}_max_seq_len'
+import wandb
+wandb.init(project=run_name)
+
 def postprocess_text(preds, labels):
     preds = [pred.strip() for pred in preds]
     labels = [[label.strip()] for label in labels]
@@ -41,7 +49,7 @@ def define_preprocess_function(source_lang, target_lang, prefix, tokenizer):
     def preprocess_function(examples):
         inputs = [prefix + example[source_lang] for example in examples['data']]
         targets = [example[target_lang] for example in examples['data']]
-        model_inputs = tokenizer(inputs, text_target=targets, max_length=200, truncation=True)
+        model_inputs = tokenizer(inputs, text_target=targets, max_length=max_seq_len, truncation=True)
         return model_inputs
 
     return preprocess_function
@@ -56,11 +64,10 @@ def main():
     source_lang = "gr"
     target_lang = "en"
     prefix = "translate German to English: "
-
     train_dataset = Dataset.from_dict({'data': train_ds})
     val_dataset = Dataset.from_dict({'data': val_ds})
 
-    tokenizer = AutoTokenizer.from_pretrained("t5-large")
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     preprocess_function = define_preprocess_function(source_lang=source_lang,
                                                      target_lang=target_lang,
                                                      prefix=prefix,
@@ -69,7 +76,7 @@ def main():
     train_tokenized_ds = train_dataset.map(lambda batch: preprocess_function(batch), batched=True)
     val_tokenized_ds = val_dataset.map(lambda batch: preprocess_function(batch), batched=True)
 
-    model = AutoModelForSeq2SeqLM.from_pretrained("t5-large")
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
     sacrebleu = evaluate.load("sacrebleu")
@@ -77,17 +84,22 @@ def main():
     compute_metrics = generate_compute_metrics(tokenizer=tokenizer, metric=sacrebleu)
 
     training_args = Seq2SeqTrainingArguments(
-        output_dir="t5_large_200_max_seq_len",
+        output_dir=run_name,
         evaluation_strategy="epoch",
+        save_strategy='epoch',
+        logging_strategy="epoch",
         learning_rate=2e-5,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
         weight_decay=0.001,
-        save_total_limit=3,
+        save_total_limit=15,
+        load_best_model_at_end=True,
+        #metric_for_best_model=sacrebleu,
         num_train_epochs=100,
         predict_with_generate=True,
         fp16=True,
         push_to_hub=False,
+        report_to="wandb"
     )
 
     trainer = Seq2SeqTrainer(
@@ -101,6 +113,8 @@ def main():
     )
 
     trainer.train()
+    trainer.save_model(f'{run_name}/best_model')
+    wandb.finish()
 
 
 if __name__ == '__main__':
