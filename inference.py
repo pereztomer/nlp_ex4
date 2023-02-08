@@ -3,7 +3,7 @@ from load_ds import load_ds_unlabeled
 
 
 def main():
-    new_file_path = './data/val.labeled_self_made'
+    new_file_path = 'data/val.labeled_t5-base_128_max_seq_len'
     unlabeled_ds = load_ds_unlabeled(path='./data/val.unlabeled')
     translator = pipeline("translation", model="./t5-base_128_max_seq_len/checkpoint-53750(best)")
 

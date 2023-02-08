@@ -7,10 +7,8 @@ import evaluate
 import numpy as np
 
 
-# transformers on azure 4.6.0
-# local version: 4.2.6
 model_name = 't5-base'
-max_seq_len = 128
+max_seq_len = 100
 run_name = f'{model_name}_{max_seq_len}_max_seq_len'
 import wandb
 wandb.init(project=run_name)
@@ -89,8 +87,8 @@ def main():
         save_strategy='epoch',
         logging_strategy="epoch",
         learning_rate=2e-5,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
+        per_device_train_batch_size=4,
+        per_device_eval_batch_size=4,
         weight_decay=0.001,
         save_total_limit=15,
         load_best_model_at_end=True,
