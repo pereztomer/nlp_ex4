@@ -114,6 +114,5 @@ def main():
     trainer.save_model(f'{run_name}/best_model')
     wandb.finish()
 
-
 if __name__ == '__main__':
     main()
