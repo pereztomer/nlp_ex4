@@ -1,3 +1,4 @@
+import torch
 from transformers import pipeline
 from load_ds import load_ds_unlabeled
 
@@ -5,15 +6,13 @@ from load_ds import load_ds_unlabeled
 def main():
     new_file_path = 'data/test'
     unlabeled_ds = load_ds_unlabeled(path='./data/val.unlabeled')
-    translator = pipeline("translation", model="./t5-base_128_max_seq_len_different_lr/best_model")
+    translator = pipeline("translation", model="./t5-base_128_max_seq_len_different_lr/best_model", device='cuda:0')
     sen_to_translate_lst = []
     for idx, val in enumerate(unlabeled_ds):
         sen_to_translate = "translate German to English: "
         for sen in val['gr']:
             sen_to_translate += sen
         sen_to_translate_lst.append(sen_to_translate)
-        if idx == 20:
-            break
 
     translations = translator(sen_to_translate_lst, max_length=420)
 

@@ -20,6 +20,8 @@ def generate_translated_ds():
         translated = GoogleTranslator(source='auto', target='de').translate(en_sen)
         new_dict = {'en': en_sen, 'gr': translated}
         translated_ds.append(new_dict)
+        if idx % 250 == 0:
+            print(f'Done {idx}/10000 samples')
 
     with open("./translation_tests/complete_translation.json", "w") as outfile:
         outfile.write(json.dumps(translated_ds, indent=4))

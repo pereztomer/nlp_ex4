@@ -8,8 +8,8 @@ import numpy as np
 
 
 model_name = 't5-base'
-max_seq_len = 100
-run_name = f'{model_name}_{max_seq_len}_max_seq_len'
+max_seq_len = 128
+run_name = f'{model_name}_{max_seq_len}_max_seq_len_different_lr'
 import wandb
 wandb.init(project=run_name)
 
@@ -87,8 +87,8 @@ def main():
         save_strategy='epoch',
         logging_strategy="epoch",
         learning_rate=2e-5,
-        per_device_train_batch_size=4,
-        per_device_eval_batch_size=4,
+        per_device_train_batch_size=8,
+        per_device_eval_batch_size=8,
         weight_decay=0.001,
         save_total_limit=15,
         load_best_model_at_end=True,
@@ -99,6 +99,7 @@ def main():
         push_to_hub=False,
         report_to="wandb"
     )
+
 
     trainer = Seq2SeqTrainer(
         model=model,
