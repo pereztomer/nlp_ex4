@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 from chu_liu_edmonds import decode_mst
 import json
 
+
 def parse_comp_file(file_address):
     with open(file_address, encoding='utf-8') as f:
         sentences = []  # Contains the final sentences without tags
@@ -84,22 +85,22 @@ def write_file(file_address, predictions):
                 new_sentence = []
                 predictions_counter += 1
 
-    # with open('./data/comp_318295029_206230021.labeled', 'w') as f:
-    #     for sen, pred in all_sentences:
-    #         for row, word_pred in zip(sen, pred[1:]):
-    #             row_lst = row.split('\t')
-    #             row_lst[6] = word_pred
-    #             row_string = ''
-    #             for idx, x in enumerate(row_lst):
-    #                 if idx == len(row_lst) - 1:
-    #                     row_string = row_string + x
-    #                 else:
-    #                     row_string = row_string + str(x) + '\t'
-    #
-    #             f.write(row_string)
-    #             row_string = ''
-    #
-    #         f.write('\n')
+    with open('./data/comp_318295029_206230021.labeled', 'w') as f:
+        for sen, pred in all_sentences:
+            for row, word_pred in zip(sen, pred[1:]):
+                row_lst = row.split('\t')
+                row_lst[6] = word_pred
+                row_string = ''
+                for idx, x in enumerate(row_lst):
+                    if idx == len(row_lst) - 1:
+                        row_string = row_string + x
+                    else:
+                        row_string = row_string + str(x) + '\t'
+
+                f.write(row_string)
+                row_string = ''
+
+            f.write('\n')
 
 
 def main():
@@ -141,7 +142,11 @@ def main():
                                   batch_size=1,
                                   shuffle=False)
     predictions = predict(model, comp_data_loader, 'cuda')
-    write_file(comp_address, predictions)
+    out_dict = {}
+    out_dict['sentences'] = split_ds_processed
+    out_dict['dependency tree'] = predictions
+    with open("./data/dependency_parsing_predictions.json", "w") as outfile:
+        outfile.write(json.dumps(out_dict, indent=4))
 
 
 if __name__ == '__main__':
