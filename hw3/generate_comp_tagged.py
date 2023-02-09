@@ -114,8 +114,7 @@ def main():
         split_ds_processed.append(words)
         sentences_real_len.append(len(words))
         positions.append([0] * len(words))
-    # comp_address = '/home/user/PycharmProjects/nlp_ex_3/val_untaged.txt'
-    comp_address = './data/comp.unlabeled'
+
     model = torch.load('comp_model_mlp_ex3').to('cuda')
     sentences_word2idx = model.sentences_word2idx
     pos_word2idx = model.pos_word2idx
@@ -142,9 +141,7 @@ def main():
                                   batch_size=1,
                                   shuffle=False)
     predictions = predict(model, comp_data_loader, 'cuda')
-    out_dict = {}
-    out_dict['sentences'] = split_ds_processed
-    out_dict['dependency tree'] = predictions
+    out_dict = {'sentences': split_ds_processed, 'dependency tree': predictions}
     with open("./data/dependency_parsing_predictions.json", "w") as outfile:
         outfile.write(json.dumps(out_dict, indent=4))
 
