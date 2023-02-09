@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
 from chu_liu_edmonds import decode_mst
-
+import json
 
 def parse_comp_file(file_address):
     with open(file_address, encoding='utf-8') as f:
@@ -84,41 +84,50 @@ def write_file(file_address, predictions):
                 new_sentence = []
                 predictions_counter += 1
 
-    with open('comp_318295029_206230021.labeled', 'w') as f:
-        for sen, pred in all_sentences:
-            for row, word_pred in zip(sen, pred[1:]):
-                row_lst = row.split('\t')
-                row_lst[6] = word_pred
-                row_string = ''
-                for idx, x in enumerate(row_lst):
-                    if idx == len(row_lst) - 1:
-                        row_string = row_string + x
-                    else:
-                        row_string = row_string + str(x) + '\t'
-
-                f.write(row_string)
-                row_string = ''
-
-            f.write('\n')
+    # with open('./data/comp_318295029_206230021.labeled', 'w') as f:
+    #     for sen, pred in all_sentences:
+    #         for row, word_pred in zip(sen, pred[1:]):
+    #             row_lst = row.split('\t')
+    #             row_lst[6] = word_pred
+    #             row_string = ''
+    #             for idx, x in enumerate(row_lst):
+    #                 if idx == len(row_lst) - 1:
+    #                     row_string = row_string + x
+    #                 else:
+    #                     row_string = row_string + str(x) + '\t'
+    #
+    #             f.write(row_string)
+    #             row_string = ''
+    #
+    #         f.write('\n')
 
 
 def main():
+    sentences_real_len = []
+    split_ds_processed = []
+    positions = []
+    split_ds_json = json.load(open('/home/tomer/PycharmProjects/nlp_ex4/translation_tests/splits_ds_english.json'))
+    for val in split_ds_json:
+        words = val['en'].split(' ')
+        words.insert(0, 'ROOT')
+        split_ds_processed.append(words)
+        sentences_real_len.append(len(words))
+        positions.append([0] * len(words))
     # comp_address = '/home/user/PycharmProjects/nlp_ex_3/val_untaged.txt'
     comp_address = './data/comp.unlabeled'
     model = torch.load('comp_model_mlp_ex3').to('cuda')
     sentences_word2idx = model.sentences_word2idx
     pos_word2idx = model.pos_word2idx
-    comp_sentences, comp_sentence_positions, comp_sentences_real_len = parse_comp_file(comp_address)
     max_sen_len = 0
     comp_sentences_idx = []
-    for sent in comp_sentences:
+    for sent in split_ds_processed:
         if len(sent) > max_sen_len:
             max_sen_len = len(sent)
         comp_sentences_idx.append(
             [sentences_word2idx[word] if word in sentences_word2idx else 1 for word in sent])
 
     comp_pos_idx = []
-    for sent_pos in comp_sentence_positions:
+    for sent_pos in positions:
         comp_pos_idx.append([pos_word2idx[pos] if pos in pos_word2idx else 0 for pos in sent_pos])
 
     comp_sentences_idx_padded = padding_(comp_sentences_idx, 250)
@@ -126,7 +135,7 @@ def main():
 
     comp_ds = CustomDataset(sentences=comp_sentences_idx_padded,
                             positions=comp_comp_pos_idx,
-                            seq_len_vals=comp_sentences_real_len)
+                            seq_len_vals=sentences_real_len)
 
     comp_data_loader = DataLoader(dataset=comp_ds,
                                   batch_size=1,
