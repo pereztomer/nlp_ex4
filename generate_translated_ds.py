@@ -26,7 +26,7 @@ def split_ds_to_sen():
                     if sub_sp == '' or len(sub_sp) == 1:
                         continue
                     else:
-                        split_ds.append(sub_sp)
+                        split_ds.append({'en': sub_sp})
 
     print(len(split_ds))
 
@@ -35,15 +35,25 @@ def split_ds_to_sen():
 
 
 def generate_translated_ds():
-    original_ds = load_ds_labeled(file_path='./data/train.labeled')
+    original_ds = json.load(open('./translation_tests/splits_ds_english.json'))
+
     translated_ds = []
     for idx, val_dict in enumerate(original_ds):
         en_sen = val_dict['en']
-        translated = GoogleTranslator(source='auto', target='de').translate(en_sen)
+        try:
+            translated = GoogleTranslator(source='auto', target='de').translate(en_sen)
+        except Exception as e:
+            print('Failed sentence:')
+            print(en_sen)
+            print(e)
+            translated = 'Failed to translate'
+
         new_dict = {'en': en_sen, 'gr': translated}
         translated_ds.append(new_dict)
+        if idx % 250 ==0:
+            print(f'finished: {idx} / 29290')
 
-    with open("./translation_tests/complete_translation.json", "w") as outfile:
+    with open("./translation_tests/complete_translation_for_split_ds.json", "w") as outfile:
         outfile.write(json.dumps(translated_ds, indent=4))
 
 
@@ -61,4 +71,4 @@ def compare_ds():
 
 
 if __name__ == '__main__':
-    split_ds_to_sen()
+    generate_translated_ds()
