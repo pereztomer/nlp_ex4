@@ -68,7 +68,7 @@ def predict(model, data_loader, device):
 
             mst, _ = decode_mst(sample_score_matrix.detach().cpu().numpy(), sample_score_matrix.shape[0],
                                 has_labels=False)
-            predictions.append(mst)
+            predictions.append(mst.tolist())
     return predictions
 
 
