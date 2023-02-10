@@ -5,14 +5,17 @@ from transformers import AutoModelForSeq2SeqLM, Seq2SeqTrainingArguments, Seq2Se
 from transformers import DataCollatorForSeq2Seq
 import evaluate
 import numpy as np
+import json
 
 model_name = 't5-base'
 max_seq_len = 128
 run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
 
 import wandb
+
 wandb.login(key='7573cbc6e943326835b588046bf1ee71f3f43408')
 wandb.init(project=run_name)
+
 
 def postprocess_text(preds, labels):
     preds = [pred.strip() for pred in preds]
@@ -57,7 +60,9 @@ def define_preprocess_function(source_lang, target_lang, prefix, tokenizer):
 def main():
     train_ds_path = './data/train.labeled'
     val_ds_path = './data/val.labeled'
-    train_ds = load_ds_labeled(file_path=train_ds_path)
+    # train_ds = load_ds_labeled(file_path=train_ds_path)
+    train_ds = json.load(open('./translation_tests/splits_ds_english_german.json'))
+
     val_ds = load_ds_labeled(file_path=val_ds_path)
 
     source_lang = "gr"
