@@ -6,11 +6,12 @@ from transformers import DataCollatorForSeq2Seq
 import evaluate
 import numpy as np
 
-
 model_name = 't5-base'
 max_seq_len = 128
-run_name = f'{model_name}_{max_seq_len}_max_seq_len_different_lr'
+run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
+
 import wandb
+wandb.login(key='7573cbc6e943326835b588046bf1ee71f3f43408')
 wandb.init(project=run_name)
 
 def postprocess_text(preds, labels):
@@ -92,14 +93,13 @@ def main():
         weight_decay=0.001,
         save_total_limit=15,
         load_best_model_at_end=True,
-        #metric_for_best_model=sacrebleu,
+        # metric_for_best_model=sacrebleu,
         num_train_epochs=100,
         predict_with_generate=True,
         fp16=True,
         push_to_hub=False,
         report_to="wandb"
     )
-
 
     trainer = Seq2SeqTrainer(
         model=model,
@@ -114,6 +114,7 @@ def main():
     trainer.train()
     trainer.save_model(f'{run_name}/best_model')
     wandb.finish()
+
 
 if __name__ == '__main__':
     main()
