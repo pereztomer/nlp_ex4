@@ -13,10 +13,10 @@ from load_ds import load_ds_to_dict
 # hyperparameters:
 model_name = 't5-base'
 max_seq_len = 128
-run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
+run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences_test'
 prefix = "translate Geraman to English: "
 
-wandb.init(project='t5-base-finetuned-de-to-en_papo_try')
+wandb.init(project=run_name)
 
 
 def get_model(model_checkpoint, datasets, source_lang, target_lang, batch_size=4):
@@ -41,16 +41,16 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, batch_size=4
         report_to="wandb"
     )
 
-    def preprocess_function(examples, max_input_length=128, max_target_length=128):
+    def preprocess_function(examples):
         inputs = [prefix + ex[source_lang] for ex in examples["translation"]]
         targets = [ex[target_lang] for ex in examples["translation"]]
         model_inputs = tokenizer(
-            inputs, max_length=max_input_length, truncation=True)
+            inputs, max_length=max_seq_len, truncation=True)
 
         # Setup the tokenizer for targets
         with tokenizer.as_target_tokenizer():
             labels = tokenizer(
-                targets, max_length=max_target_length, truncation=True)
+                targets, max_length=max_seq_len, truncation=True)
 
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs
