@@ -32,6 +32,30 @@ def load_ds_labeled(file_path):
     return out_ds
 
 
+def load_ds_to_dict(path):
+    data_dict = {'translation': []}
+    sample = {}
+    with open(path) as f:
+        for line in f:
+
+            if line == "German:\n":
+                status = "de"
+                sample[status] = ""
+
+            elif line == "English:\n":
+                status = "en"
+                sample[status] = ""
+
+            elif line != '\n':
+                sample[status] += line
+
+            else:
+                data_dict['translation'].append(sample)
+                sample = {}
+
+    return data_dict
+
+
 def load_ds_unlabeled(path):
     ds = []
     with open(path) as my_file:
