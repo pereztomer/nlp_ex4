@@ -12,10 +12,10 @@ from load_ds import load_ds_to_dict
 
 # hyperparameters:
 model_name = 't5-base'
-max_seq_len = 128
-run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
+max_seq_len = 200
+run_name = f'{model_name}_{max_seq_len}_max_seq_len'
 prefix = "translate Geraman to English: "
-
+epochs = 50
 wandb.init(project=run_name)
 
 
@@ -28,15 +28,17 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, batch_size=4
     model_name = model_checkpoint.split("/")[-1]
     args = Seq2SeqTrainingArguments(
         run_name,
+        save_strategy='epoch',
+        logging_strategy="epoch",
         evaluation_strategy="epoch",
         learning_rate=2e-5,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         weight_decay=0.01,
-        save_total_limit=50,
-        num_train_epochs=50,
+        save_total_limit=epochs,
+        num_train_epochs=epochs,
         predict_with_generate=True,
-        fp16=True,
+        fp16=False,
         push_to_hub=False,
         report_to="wandb"
     )
