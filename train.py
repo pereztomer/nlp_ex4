@@ -10,13 +10,14 @@ import numpy as np
 import wandb
 from load_ds import load_ds_to_dict
 import json
+
 # hyper parameters:
 model_name = 't5-base'
 max_seq_len = 128
 run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
 prefix = "translate German to English: "
 epochs = 30
-batch_size = 6
+batch_size = 2
 wandb.init(project=run_name)
 
 
@@ -106,15 +107,41 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang):
     return model
 
 
+def load_parsed_ds(file_path):
+    ds = json.load(open(file_path))
+    out_ds = []
+    for val in ds:
+        new_dict = {}
+        new_dict['de'] = val['de']
+
+        intro_sen = ''
+        for value in val['parsing_tree']:
+            root_index = value[1].index(0)
+            root = value[0][root_index]
+            # get modifiers:
+            modifiers_to_add = ''
+            modifiers_of_root_indexes = [idx for idx, value_inner in enumerate(value[1]) if value_inner == root_index]
+            if len(modifiers_of_root_indexes) >= 2:
+                modifiers_to_add = modifiers_to_add + value[0][modifiers_of_root_indexes[0]]
+                modifiers_to_add = modifiers_to_add + ', ' + value[0][modifiers_of_root_indexes[1]]
+            elif len(modifiers_of_root_indexes) == 1:
+                modifiers_to_add = modifiers_to_add + value[0][modifiers_of_root_indexes[0]]
+            intro_sen += f'sentence root: {root}, root modifiers: {modifiers_to_add}, '
+
+        new_dict['en'] = intro_sen + ' English sentences to translate: ' + val['en']
+        out_ds.append(new_dict)
+    return {'translation': out_ds}
+
+
 def train():
-    # train_ds = json.load(open('./translation_tests/splits_ds_english_german.json'))
-    #
-    # for val in train_ds:
-    #     val['de'] = val['gr']
-    #     del val['gr']
-    train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
-    train_dataset = Dataset.from_dict({'translation': train_dataset})
-    validation_dataset = Dataset.from_dict(load_ds_to_dict("data/val.labeled"))
+    train_path = './data/train_dependency_parsed.json'
+    train_ds = load_parsed_ds(train_path)
+    val_path = './data/val_dependency_parsed.json'
+    val_ds = load_parsed_ds(val_path)
+
+    # train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
+    train_dataset = Dataset.from_dict(train_ds)
+    validation_dataset = Dataset.from_dict(val_ds)
     datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
 
     model = get_model(
