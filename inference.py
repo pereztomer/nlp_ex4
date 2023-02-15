@@ -4,10 +4,10 @@ from load_ds import load_ds_unlabeled
 
 
 def main():
-    model_name ='t5-base_200_max_seq_len'
+    model_name ='t5-base_128_max_seq_len_short_sentences'
     new_file_path = f'data/val.labeled_{model_name}'
     unlabeled_ds = load_ds_unlabeled(path='./data/val.unlabeled')
-    translator = pipeline("translation", model=f'{model_name}/checkpoint-108500', device='cuda:0')
+    translator = pipeline("translation", model=f'{model_name}/checkpoint-28847', device='cuda:0')
     sen_to_translate_lst = []
     for idx, val in enumerate(unlabeled_ds):
         sen_to_translate = "translate German to English: "

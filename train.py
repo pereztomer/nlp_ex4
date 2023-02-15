@@ -9,17 +9,18 @@ from datasets import load_metric
 import numpy as np
 import wandb
 from load_ds import load_ds_to_dict
-
+import json
 # hyperparameters:
 model_name = 't5-base'
-max_seq_len = 200
-run_name = f'{model_name}_{max_seq_len}_max_seq_len'
+max_seq_len = 128
+run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
 prefix = "translate Geraman to English: "
 epochs = 50
+batch_size = 6
 wandb.init(project=run_name)
 
 
-def get_model(model_checkpoint, datasets, source_lang, target_lang, batch_size=4):
+def get_model(model_checkpoint, datasets, source_lang, target_lang):
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
     metric = load_metric("sacrebleu")
 
@@ -106,7 +107,13 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, batch_size=4
 
 
 def train():
-    train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
+    train_ds = json.load(open('./translation_tests/splits_ds_english_german.json'))
+
+    for val in train_ds:
+        val['de'] = val['gr']
+        del val['gr']
+    # train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
+    train_dataset = Dataset.from_dict({'translation': train_ds})
     validation_dataset = Dataset.from_dict(load_ds_to_dict("data/val.labeled"))
     datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
 
