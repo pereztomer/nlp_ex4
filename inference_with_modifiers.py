@@ -11,19 +11,16 @@ def main():
     for val in unlabeled_ds:
         intro_sen = ''
         new_dict = {}
-        new_dict['de'] = val['de']
         for root, modifiers in zip(val['Roots in English'], val['Modifiers in English']):
-
             modifiers_to_add = ''
             for m in modifiers:
                 modifiers_to_add = modifiers_to_add + m + ', '
             intro_sen += f'sentence root: {root}, root modifiers: {modifiers_to_add}'
 
-    new_dict['en'] = intro_sen + ' English sentences to translate: ' + val['en']
+        zero_entry = intro_sen + ' German sentences to translate: '
+        val['gr'].insert(0, zero_entry)
 
-    'sentence root: has, root modifiers: What, gone, sentence root: economic, root modifiers: crisis,' \
-    '  English sentences to translate: What has gone so wrong?' \
-    'The economic crisis seems to be the most obvious explanation, but perhaps too obvious.'
+        ds_processed.append(new_dict)
 
     translator = pipeline("translation", model=f'{model_name}/checkpoint-28847', device='cuda:0')
     sen_to_translate_lst = []
