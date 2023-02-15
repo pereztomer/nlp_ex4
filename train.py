@@ -18,7 +18,7 @@ run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
 prefix = "translate German to English: "
 epochs = 30
 batch_size = 2
-wandb.init(project=run_name)
+# wandb.init(project=run_name)
 
 
 def get_model(model_checkpoint, datasets, source_lang, target_lang):
@@ -112,7 +112,7 @@ def load_parsed_ds(file_path):
     out_ds = []
     for val in ds:
         new_dict = {}
-        new_dict['de'] = val['de']
+        new_dict['en'] = val['en']
 
         intro_sen = ''
         for value in val['parsing_tree']:
@@ -128,7 +128,7 @@ def load_parsed_ds(file_path):
                 modifiers_to_add = modifiers_to_add + value[0][modifiers_of_root_indexes[0]]
             intro_sen += f'sentence root: {root}, root modifiers: {modifiers_to_add}, '
 
-        new_dict['en'] = intro_sen + ' English sentences to translate: ' + val['en']
+        new_dict['de'] = intro_sen + ' German sentences to translate: ' + val['de']
         out_ds.append(new_dict)
     return {'translation': out_ds}
 
