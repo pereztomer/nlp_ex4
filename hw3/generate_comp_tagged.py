@@ -117,8 +117,6 @@ def main():
     max_sen_len = 250
     generated_samples = []
     for counter, value in enumerate(train_dataset['translation']):
-        if counter == 10:
-            break
         ger_paragraph = value['de']
         eg_paragraph = value['en']
         eg_paragraph_temp = eg_paragraph.replace('\n', '')
