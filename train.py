@@ -15,7 +15,7 @@ model_name = 't5-base'
 max_seq_len = 128
 run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
 prefix = "translate Geraman to English: "
-epochs = 50
+epochs = 30ד
 batch_size = 6
 wandb.init(project=run_name)
 
