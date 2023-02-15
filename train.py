@@ -10,12 +10,12 @@ import numpy as np
 import wandb
 from load_ds import load_ds_to_dict
 import json
-# hyperparameters:
+# hyper parameters:
 model_name = 't5-base'
 max_seq_len = 128
 run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
-prefix = "translate Geraman to English: "
-epochs = 30ד
+prefix = "translate German to English: "
+epochs = 30
 batch_size = 6
 wandb.init(project=run_name)
 
@@ -107,13 +107,13 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang):
 
 
 def train():
-    train_ds = json.load(open('./translation_tests/splits_ds_english_german.json'))
-
-    for val in train_ds:
-        val['de'] = val['gr']
-        del val['gr']
-    # train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
-    train_dataset = Dataset.from_dict({'translation': train_ds})
+    # train_ds = json.load(open('./translation_tests/splits_ds_english_german.json'))
+    #
+    # for val in train_ds:
+    #     val['de'] = val['gr']
+    #     del val['gr']
+    train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
+    train_dataset = Dataset.from_dict({'translation': train_dataset})
     validation_dataset = Dataset.from_dict(load_ds_to_dict("data/val.labeled"))
     datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
 
