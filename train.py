@@ -134,9 +134,9 @@ def load_parsed_ds(file_path):
 
 
 def train():
-    train_path = './data/train_dependency_parsed.json'
+    train_path = './new_data/data_for_training/train_ds_dependency_parsed.json'
     train_ds = load_parsed_ds(train_path)
-    val_path = './data/val_dependency_parsed.json'
+    val_path = './new_data/data_for_training/val_ds_dependency_parsed.json'
     val_ds = load_parsed_ds(val_path)
 
     # train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
