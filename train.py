@@ -31,7 +31,7 @@ def print_summary(result):
 # hyper parameters:
 model_name = 't5-base'
 max_seq_len = 250
-run_name = f'kfold/{model_name}_{max_seq_len}_max_seq_len_modifiers_train_val_from_model_2'
+run_name = f'{model_name}_{max_seq_len}_max_seq_len_modifiers_train_val_from_model_2'
 prefix = "translate German to English: "
 epochs = 45
 batch_size = 4
@@ -46,7 +46,7 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
 
     model_name = model_checkpoint.split("/")[-1]
     args = Seq2SeqTrainingArguments(
-        f'{run_name}/fold_{fold_num}',
+        f'kfold/{run_name}/fold_{fold_num}',
         gradient_accumulation_steps=2,
         save_strategy='epoch',
         logging_strategy="epoch",
