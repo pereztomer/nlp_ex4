@@ -12,16 +12,30 @@ from load_ds import load_ds_to_dict
 import json
 from sklearn.model_selection import KFold
 
+from pynvml import *
+
+
+def print_gpu_utilization():
+    nvmlInit()
+    handle = nvmlDeviceGetHandleByIndex(0)
+    info = nvmlDeviceGetMemoryInfo(handle)
+    print(f"GPU memory occupied: {info.used // 1024 ** 2} MB.")
+
+
+def print_summary(result):
+    print(f"Time: {result.metrics['train_runtime']:.2f}")
+    print(f"Samples/second: {result.metrics['train_samples_per_second']:.2f}")
+    print_gpu_utilization()
+
+
 # hyper parameters:
 model_name = 't5-base'
-max_seq_len = 128
-run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
+max_seq_len = 250
+run_name = f'kfold/{model_name}_{max_seq_len}_max_seq_len_modifiers_train_val_from_model_2'
 prefix = "translate German to English: "
-epochs = 1
-batch_size = 2
-
-
-# wandb.init(project=run_name)
+epochs = 45
+batch_size = 4
+wandb.init(project=run_name)
 
 
 def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
@@ -33,6 +47,7 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
     model_name = model_checkpoint.split("/")[-1]
     args = Seq2SeqTrainingArguments(
         f'{run_name}/fold_{fold_num}',
+        gradient_accumulation_steps=2,
         save_strategy='epoch',
         logging_strategy="epoch",
         evaluation_strategy="epoch",
@@ -43,7 +58,7 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
         save_total_limit=epochs,
         num_train_epochs=epochs,
         predict_with_generate=True,
-        fp16=False,
+        fp16=True,
         push_to_hub=False,
         report_to="wandb"
     )
@@ -107,7 +122,6 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
     )
 
     trainer.train()
-    return model
 
 
 def load_parsed_ds(file_path):
@@ -149,20 +163,25 @@ def train():
         train_ds = []
         for index in train_index:
             train_ds.append(complete_ds[index])
+        train_ds = train_ds[:500]
         val_ds = []
         for index in val_index:
             val_ds.append(complete_ds[index])
+        val_ds = val_ds[:100]
         train_dataset = Dataset.from_dict({'translation': train_ds})
         validation_dataset = Dataset.from_dict({'translation': val_ds})
         datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
 
-        model = get_model(
+        get_model(
             model_checkpoint="t5-base",
             datasets=datasets,
             source_lang="de",
             target_lang="en",
             fold_num=i
         )
+        train_dataset = None
+        validation_dataset = None
+        datasets = None
 
 
 def main():

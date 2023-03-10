@@ -109,7 +109,7 @@ def write_file(file_address, predictions):
 
 
 def main():
-    train_dataset = Dataset.from_dict(load_ds_to_dict("/home/tomer/PycharmProjects/nlp_ex4/new_data/val.labeled"))
+    train_dataset = Dataset.from_dict(load_ds_to_dict("/home/user/PycharmProjects/nlp_ex4/data/val.labeled"))
 
     model = torch.load('comp_model_mlp_ex3').to('cuda')
     sentences_word2idx = model.sentences_word2idx
@@ -117,6 +117,8 @@ def main():
     max_sen_len = 250
     generated_samples = []
     for counter, value in enumerate(train_dataset['translation']):
+        if counter % 1000 == 0:
+            print(f'{counter}/{len(train_dataset["translation"])}')
         ger_paragraph = value['de']
         eg_paragraph = value['en']
         eg_paragraph_temp = eg_paragraph.replace('\n', '')
@@ -151,7 +153,7 @@ def main():
         paragraphs_dict = {'en': eg_paragraph, 'de': ger_paragraph, 'parsing_tree': split_en_paragraph_list}
         generated_samples.append(paragraphs_dict)
 
-    with open("/home/tomer/PycharmProjects/nlp_ex4/new_data/data_for_training/val_ds_dependency_parsed.json", "w") as outfile:
+    with open("/home/user/PycharmProjects/nlp_ex4/data/val_dependency_parsed.json", "w") as outfile:
         outfile.write(json.dumps(generated_samples, indent=4))
 
 
