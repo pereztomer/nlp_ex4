@@ -163,11 +163,9 @@ def train():
         train_ds = []
         for index in train_index:
             train_ds.append(complete_ds[index])
-        train_ds = train_ds[:500]
         val_ds = []
         for index in val_index:
             val_ds.append(complete_ds[index])
-        val_ds = val_ds[:100]
         train_dataset = Dataset.from_dict({'translation': train_ds})
         validation_dataset = Dataset.from_dict({'translation': val_ds})
         datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
