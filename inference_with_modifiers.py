@@ -2,6 +2,8 @@ import torch
 from transformers import pipeline
 from load_ds import load_ds_unlabeled_modifiers
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 def main():
     model_name = 't5-base_250_max_seq_len_modifiers_train_val_from_model_2'
@@ -19,8 +21,7 @@ def main():
         zero_entry = intro_sen + ' German sentences to translate: '
         val['gr'].insert(0, zero_entry)
 
-
-    translator = pipeline("translation", model=f'{model_name}/checkpoint-24375', device='cuda:0')
+    translator = pipeline("translation", model=f'{model_name}/checkpoint-24375', device=device)
     sen_to_translate_lst = []
     for idx, val in enumerate(unlabeled_ds):
         sen_to_translate = "translate German to English: "
