@@ -109,7 +109,7 @@ def load_ds_unlabeled_modifiers(path):
 
 
 def main():
-    val_ds_path = './data/val.labeled'
+    val_ds_path = 'archive/data/val.labeled'
     ds = load_ds_labeled(file_path=val_ds_path)
     print('hi')
 

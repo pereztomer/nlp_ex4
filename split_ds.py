@@ -20,7 +20,7 @@ def splits_paragraph(paragraph):
 
 def split_ds_to_sen_old():
     split_ds = []
-    original_ds = load_ds_labeled(file_path='./data/train.labeled')
+    original_ds = load_ds_labeled(file_path='archive/data/train.labeled')
     for idx, val_dict in enumerate(original_ds):
         en_sentences = splits_paragraph(paragraph=val_dict['en'])
         ger_sentences = splits_paragraph(paragraph=val_dict['gr'])
@@ -34,7 +34,7 @@ def split_ds_to_sen_old():
             split_ds.append(temp_dict)
 
     print(len(split_ds))
-    with open("./data/splits_ds_english_german.json", "w") as outfile:
+    with open("archive/data/splits_ds_english_german.json", "w") as outfile:
         outfile.write(json.dumps(split_ds, indent=4))
 
 

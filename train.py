@@ -8,25 +8,8 @@ from transformers import (AutoTokenizer,
 from datasets import load_metric
 import numpy as np
 import wandb
-from load_ds import load_ds_to_dict
 import json
 from sklearn.model_selection import KFold
-
-from pynvml import *
-
-
-def print_gpu_utilization():
-    nvmlInit()
-    handle = nvmlDeviceGetHandleByIndex(0)
-    info = nvmlDeviceGetMemoryInfo(handle)
-    print(f"GPU memory occupied: {info.used // 1024 ** 2} MB.")
-
-
-def print_summary(result):
-    print(f"Time: {result.metrics['train_runtime']:.2f}")
-    print(f"Samples/second: {result.metrics['train_samples_per_second']:.2f}")
-    print_gpu_utilization()
-
 
 # hyper parameters:
 model_name = 't5-base'
@@ -37,7 +20,7 @@ epochs = 45
 batch_size = 4
 
 
-# wandb.init(project=run_name)
+wandb.init(project=run_name)
 
 
 def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
@@ -46,9 +29,8 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)
 
-    model_name = model_checkpoint.split("/")[-1]
     args = Seq2SeqTrainingArguments(
-        f'kfold/{run_name}/fold_{fold_num}',
+        f'models/kfold/{run_name}/fold_{fold_num}',
         gradient_accumulation_steps=2,
         save_strategy='epoch',
         logging_strategy="epoch",
@@ -130,8 +112,7 @@ def load_parsed_ds(file_path):
     ds = json.load(open(file_path))
     out_ds = []
     for val in ds:
-        new_dict = {}
-        new_dict['en'] = val['en']
+        new_dict = {'en': val['en']}
 
         intro_sen = ''
         for value in val['parsing_tree']:
@@ -169,23 +150,23 @@ def train():
         for index in val_index:
             val_ds.append(complete_ds[index])
 
-        # Writing to sample.json
         with open(f'kfold/{run_name}/fold_{i}/train.json', "w") as outfile:
             outfile.write(json.dumps(train_ds, indent=4))
 
         with open(f'kfold/{run_name}/fold_{i}/val.json', "w") as outfile:
             outfile.write(json.dumps(val_ds, indent=4))
-        # train_dataset = Dataset.from_dict({'translation': train_ds})
-        # validation_dataset = Dataset.from_dict({'translation': val_ds})
-        # datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
-        #
-        # get_model(
-        #     model_checkpoint="t5-base",
-        #     datasets=datasets,
-        #     source_lang="de",
-        #     target_lang="en",
-        #     fold_num=i
-        # )
+
+        train_dataset = Dataset.from_dict({'translation': train_ds})
+        validation_dataset = Dataset.from_dict({'translation': val_ds})
+        datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
+
+        get_model(
+            model_checkpoint="t5-base",
+            datasets=datasets,
+            source_lang="de",
+            target_lang="en",
+            fold_num=i
+        )
         train_dataset = None
         validation_dataset = None
         datasets = None

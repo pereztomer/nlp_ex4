@@ -58,10 +58,10 @@ def define_preprocess_function(source_lang, target_lang, prefix, tokenizer):
 
 
 def main():
-    train_ds_path = './data/train.labeled'
-    val_ds_path = './data/val.labeled'
+    train_ds_path = 'data/train.labeled'
+    val_ds_path = 'data/val.labeled'
     # train_ds = load_ds_labeled(file_path=train_ds_path)
-    train_ds = json.load(open('./translation_tests/splits_ds_english_german.json'))
+    train_ds = json.load(open('translation_tests/splits_ds_english_german.json'))
 
     val_ds = load_ds_labeled(file_path=val_ds_path)
 

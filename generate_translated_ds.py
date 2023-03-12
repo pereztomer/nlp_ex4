@@ -41,12 +41,12 @@ def split_ds_to_sen(ds_path):
                         sub_sp = add_sigh(full_paragraph=val_dict['en'], sen=sub_sp, sign='?')
                         split_ds.append({'en': sub_sp})
 
-    with open("./translation_tests/splits_ds_english.json", "w") as outfile:
+    with open("archive/translation_tests/splits_ds_english.json", "w") as outfile:
         outfile.write(json.dumps(split_ds, indent=4))
 
 
 def generate_translated_ds():
-    original_ds = json.load(open('./translation_tests/splits_ds_english.json'))
+    original_ds = json.load(open('archive/translation_tests/splits_ds_english.json'))
 
     translated_ds = []
     for idx, val_dict in enumerate(original_ds):
@@ -64,11 +64,11 @@ def generate_translated_ds():
         if idx % 250 == 0:
             print(f'finished: {idx} / 29290')
 
-    with open("./translation_tests/complete_translation_for_split_ds.json", "w") as outfile:
+    with open("archive/translation_tests/complete_translation_for_split_ds.json", "w") as outfile:
         outfile.write(json.dumps(translated_ds, indent=4))
 
 def compare_ds():
-    translated_ds = json.load(open('./translation_tests/complete_translation.json'))
+    translated_ds = json.load(open('archive/translation_tests/complete_translation.json'))
     file2_en, file2_de = [], []
     for value in translated_ds:
         en_sentence = value['en']
@@ -76,7 +76,7 @@ def compare_ds():
         file2_en.append(en_sentence)
         file2_de.append(german_sentence)
 
-    file1_en, file1_de = read_file(file_path='./data/train.labeled')
+    file1_en, file1_de = read_file(file_path='archive/data/train.labeled')
     calculate_score(file1_en, file1_de, file2_en, file2_de)
 
 
@@ -91,9 +91,9 @@ def convert_to_list(ds):
 
 
 def match_ds():
-    original_split_ds = json.load(open('./translation_tests/splits_ds_english_german.json'))
+    original_split_ds = json.load(open('archive/translation_tests/splits_ds_english_german.json'))
     original_english_sentences, original_german_sentences = convert_to_list(original_split_ds)
-    translated_split_ds = json.load(open('./translation_tests/complete_translation_for_split_ds.json'))
+    translated_split_ds = json.load(open('archive/translation_tests/complete_translation_for_split_ds.json'))
     translated_english_sentences, translated_german_sentences = convert_to_list(translated_split_ds)
 
     keep_original_english = []
