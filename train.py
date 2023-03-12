@@ -35,7 +35,9 @@ run_name = f'{model_name}_{max_seq_len}_max_seq_len_modifiers_train_val_from_mod
 prefix = "translate German to English: "
 epochs = 45
 batch_size = 4
-wandb.init(project=run_name)
+
+
+# wandb.init(project=run_name)
 
 
 def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
@@ -166,17 +168,24 @@ def train():
         val_ds = []
         for index in val_index:
             val_ds.append(complete_ds[index])
-        train_dataset = Dataset.from_dict({'translation': train_ds})
-        validation_dataset = Dataset.from_dict({'translation': val_ds})
-        datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
 
-        get_model(
-            model_checkpoint="t5-base",
-            datasets=datasets,
-            source_lang="de",
-            target_lang="en",
-            fold_num=i
-        )
+        # Writing to sample.json
+        with open(f'kfold/{run_name}/fold_{i}/train.json', "w") as outfile:
+            outfile.write(json.dumps(train_ds, indent=4))
+
+        with open(f'kfold/{run_name}/fold_{i}/val.json', "w") as outfile:
+            outfile.write(json.dumps(val_ds, indent=4))
+        # train_dataset = Dataset.from_dict({'translation': train_ds})
+        # validation_dataset = Dataset.from_dict({'translation': val_ds})
+        # datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
+        #
+        # get_model(
+        #     model_checkpoint="t5-base",
+        #     datasets=datasets,
+        #     source_lang="de",
+        #     target_lang="en",
+        #     fold_num=i
+        # )
         train_dataset = None
         validation_dataset = None
         datasets = None
