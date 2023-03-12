@@ -1,4 +1,4 @@
-from deep_translator import GoogleTranslator
+from deep_translator import GoogleTranslator  # Used for translation of sentences from source language to target language
 from load_ds import load_ds_labeled
 import json
 from project_evaluate import compute_metrics, read_file
