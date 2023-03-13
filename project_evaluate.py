@@ -1,5 +1,6 @@
 import evaluate
 
+
 def postprocess_text(preds, labels):
     preds = [pred.strip() for pred in preds]
     labels = [[label.strip()] for label in labels]
@@ -52,3 +53,8 @@ def calculate_score(file_path1, file_path2):
     # exit()
     score = compute_metrics(file1_en, file2_en)
     print(score)
+
+
+if __name__ == '__main__':
+    calculate_score(file_path1='./new_data/val.labeled',
+                    file_path2='new_data/val.labeled_t5-base_250_max_seq_len_modifiers_train_val_from_model_2')

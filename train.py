@@ -8,11 +8,8 @@ from transformers import (AutoTokenizer,
 from datasets import load_metric
 import numpy as np
 import wandb
-from load_ds import load_ds_to_dict
 import json
 from sklearn.model_selection import KFold
-
-from pynvml import *
 
 # hyper parameters:
 model_name = 't5-base'
@@ -21,97 +18,19 @@ run_name = f'{model_name}_{max_seq_len}_max_seq_len_modifiers_train_val_from_mod
 prefix = "translate German to English: "
 epochs = 45
 batch_size = 4
-# wandb.init(project=run_name)
 
 
-def print_gpu_utilization():
-    """
-    GPU Usage tracking
-    """
-    nvmlInit()
-    handle = nvmlDeviceGetHandleByIndex(0)
-    info = nvmlDeviceGetMemoryInfo(handle)
-    print(f"GPU memory occupied: {info.used // 1024 ** 2} MB.")
-
-
-def print_summary(result):
-    """
-    Training tracker
-    """
-    print(f"Time: {result.metrics['train_runtime']:.2f}")
-    print(f"Samples/second: {result.metrics['train_samples_per_second']:.2f}")
-    print_gpu_utilization()
+wandb.init(project=run_name)
 
 
 def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
-    """
-    This function
-    Parameters
-    ----------
-    model_checkpoint:
-    datasets:
-    source_lang:
-    target_lang:
-    fold_num:
-
-    Returns
-    -------
-
-    """
-
-    def preprocess_function(examples):
-        """
-        Preprocesses given examples, so they can be used as model inputs
-        """
-        inputs = [prefix + ex[source_lang] for ex in examples["translation"]]
-        targets = [ex[target_lang] for ex in examples["translation"]]
-        model_inputs = tokenizer(
-            inputs, max_length=max_seq_len, truncation=True)
-
-        # Setup the tokenizer for targets
-        with tokenizer.as_target_tokenizer():
-            labels = tokenizer(
-                targets, max_length=max_seq_len, truncation=True)
-
-        model_inputs["labels"] = labels["input_ids"]
-        return model_inputs
-
-    def postprocess_text(preds, labels):
-        preds = [pred.strip() for pred in preds]
-        labels = [[label.strip()] for label in labels]
-
-        return preds, labels
-
-    def compute_metrics(eval_preds):
-        preds, labels = eval_preds
-        if isinstance(preds, tuple):
-            preds = preds[0]
-
-        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-
-        # Replace -100 in the labels as we can't decode them.
-        labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
-        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-
-        # Some simple post-processing
-        decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
-
-        result = metric.compute(predictions=decoded_preds, references=decoded_labels)
-        result = {"bleu": result["score"]}
-
-        prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in preds]
-        result["gen_len"] = np.mean(prediction_lens)
-        result = {k: round(v, 4) for k, v in result.items()}
-        return result
-
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
     metric = load_metric("sacrebleu")
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)
 
-    model_name = model_checkpoint.split("/")[-1]
-    args = Seq2SeqTrainingArguments(  # Setting the arguments for the Seq2Seq model training
-        f'kfold/{run_name}/fold_{fold_num}',
+    args = Seq2SeqTrainingArguments(
+        f'models/kfold/{run_name}/fold_{fold_num}',
         gradient_accumulation_steps=2,
         save_strategy='epoch',
         logging_strategy="epoch",
@@ -128,11 +47,53 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
         report_to="wandb"
     )
 
-    tokenized_datasets = datasets.map(preprocess_function, batched=True)
+    def preprocess_function(examples):
+        inputs = [prefix + ex[source_lang] for ex in examples["translation"]]
+        targets = [ex[target_lang] for ex in examples["translation"]]
+        model_inputs = tokenizer(
+            inputs, max_length=max_seq_len, truncation=True)
 
-    # Data collators are objects that will form a batch by using a list of dataset elements as input.
-    data_collator = DataCollatorForSeq2Seq(tokenizer,
-                                           model=model)  # Data collator that will dynamically pad the inputs received, as well as the labels.
+        # Setup the tokenizer for targets
+        with tokenizer.as_target_tokenizer():
+            labels = tokenizer(
+                targets, max_length=max_seq_len, truncation=True)
+
+        model_inputs["labels"] = labels["input_ids"]
+        return model_inputs
+
+    tokenized_datasets = datasets.map(preprocess_function, batched=True)
+    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
+
+    def postprocess_text(preds, labels):
+        preds = [pred.strip() for pred in preds]
+        labels = [[label.strip()] for label in labels]
+
+        return preds, labels
+
+    def compute_metrics(eval_preds):
+        preds, labels = eval_preds
+        if isinstance(preds, tuple):
+            preds = preds[0]
+        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+
+        # Replace -100 in the labels as we can't decode them.
+        labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+        decoded_labels = tokenizer.batch_decode(
+            labels, skip_special_tokens=True)
+
+        # Some simple post-processing
+        decoded_preds, decoded_labels = postprocess_text(
+            decoded_preds, decoded_labels)
+
+        result = metric.compute(predictions=decoded_preds,
+                                references=decoded_labels)
+        result = {"bleu": result["score"]}
+
+        prediction_lens = [np.count_nonzero(
+            pred != tokenizer.pad_token_id) for pred in preds]
+        result["gen_len"] = np.mean(prediction_lens)
+        result = {k: round(v, 4) for k, v in result.items()}
+        return result
 
     trainer = Seq2SeqTrainer(
         model,
@@ -151,8 +112,7 @@ def load_parsed_ds(file_path):
     ds = json.load(open(file_path))
     out_ds = []
     for val in ds:
-        new_dict = {}
-        new_dict['en'] = val['en']
+        new_dict = {'en': val['en']}
 
         intro_sen = ''
         for value in val['parsing_tree']:
@@ -180,7 +140,7 @@ def train():
     val_ds = load_parsed_ds(val_path)
     complete_ds = train_ds['translation'] + val_ds['translation']
 
-    kf = KFold(n_splits=5, random_state=500, shuffle=True)  # 5-Fold Cross Validation
+    kf = KFold(n_splits=5, random_state=500, shuffle=True)
     for i, (train_index, val_index) in enumerate(kf.split(complete_ds)):
         print(f"Fold {i}:")
         train_ds = []
@@ -189,6 +149,13 @@ def train():
         val_ds = []
         for index in val_index:
             val_ds.append(complete_ds[index])
+
+        with open(f'kfold/{run_name}/fold_{i}/train.json', "w") as outfile:
+            outfile.write(json.dumps(train_ds, indent=4))
+
+        with open(f'kfold/{run_name}/fold_{i}/val.json', "w") as outfile:
+            outfile.write(json.dumps(val_ds, indent=4))
+
         train_dataset = Dataset.from_dict({'translation': train_ds})
         validation_dataset = Dataset.from_dict({'translation': val_ds})
         datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
