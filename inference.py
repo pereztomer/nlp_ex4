@@ -2,12 +2,14 @@ import torch
 from transformers import pipeline
 from load_ds import load_ds_unlabeled
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 
 def main():
-    model_name ='t5-base_128_max_seq_len_short_sentences'
+    model_name = 't5-base_128_max_seq_len_short_sentences'
     new_file_path = f'archive/data/val.labeled_{model_name}'
     unlabeled_ds = load_ds_unlabeled(path='archive/data/val.unlabeled')
-    translator = pipeline("translation", model=f'{model_name}/checkpoint-28847', device='cuda:0')
+    translator = pipeline("translation", model=f'{model_name}/checkpoint-28847', device=device)
     sen_to_translate_lst = []
     for idx, val in enumerate(unlabeled_ds):
         sen_to_translate = "translate German to English: "

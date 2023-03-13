@@ -19,7 +19,6 @@ prefix = "translate German to English: "
 epochs = 45
 batch_size = 4
 
-
 wandb.init(project=run_name)
 
 

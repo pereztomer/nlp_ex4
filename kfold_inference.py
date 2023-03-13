@@ -1,7 +1,10 @@
 import json
 import evaluate
 import numpy as np
+import torch
 from transformers import pipeline
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
@@ -13,7 +16,7 @@ def main():
 
         translator = pipeline("translation",
                               model=f'kfold/{model_name}/fold_{index}/checkpoint-{model_ck}',
-                              device='cuda:0')
+                              device=device)
         val_set = json.load(open(f'kfold/{model_name}/fold_{index}/val.json'))
         original_eng_sentences_list = []
         ger_sentences_for_translation = []
