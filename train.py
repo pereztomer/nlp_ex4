@@ -7,7 +7,7 @@ from transformers import (AutoTokenizer,
                           DataCollatorForSeq2Seq)
 from datasets import load_metric
 import numpy as np
-import wandb
+# import wandb
 import json
 from sklearn.model_selection import KFold
 
@@ -19,7 +19,7 @@ prefix = "translate German to English: "
 epochs = 45
 batch_size = 4
 
-wandb.init(project=run_name)
+# wandb.init(project=run_name)
 
 
 def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
@@ -43,7 +43,7 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
         predict_with_generate=True,
         fp16=True,
         push_to_hub=False,
-        report_to="wandb"
+        # report_to="wandb"
     )
 
     def preprocess_function(examples):
