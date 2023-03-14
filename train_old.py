@@ -10,21 +10,18 @@ import numpy as np
 import wandb
 from load_ds import load_ds_to_dict
 import json
-from sklearn.model_selection import KFold
 
 # hyper parameters:
 model_name = 't5-base'
-max_seq_len = 50
+max_seq_len = 128
 run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
 prefix = "translate German to English: "
-epochs = 25
-batch_size = 4
+epochs = 30
+batch_size = 2
+# wandb.init(project=run_name)
 
 
-wandb.init(project=run_name)
-
-
-def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
+def get_model(model_checkpoint, datasets, source_lang, target_lang):
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
     metric = load_metric("sacrebleu")
 
@@ -32,7 +29,7 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
 
     model_name = model_checkpoint.split("/")[-1]
     args = Seq2SeqTrainingArguments(
-        f'{run_name}/fold_{fold_num}',
+        run_name,
         save_strategy='epoch',
         logging_strategy="epoch",
         evaluation_strategy="epoch",
@@ -141,30 +138,18 @@ def train():
     train_ds = load_parsed_ds(train_path)
     val_path = './new_data/data_for_training/val_ds_dependency_parsed.json'
     val_ds = load_parsed_ds(val_path)
-    complete_ds = train_ds['translation'] + val_ds['translation']
 
-    kf = KFold(n_splits=5, random_state=500, shuffle=True)
-    for i, (train_index, val_index) in enumerate(kf.split(complete_ds)):
-        print(f"Fold {i}:")
-        train_ds = []
-        for index in train_index:
-            train_ds.append(complete_ds[index])
-        val_ds = []
-        for index in val_index:
-            val_ds.append(complete_ds[index])
-        train_ds = train_ds[:500]
-        val_ds = val_ds[:100]
-        train_dataset = Dataset.from_dict({'translation': train_ds})
-        validation_dataset = Dataset.from_dict({'translation': val_ds})
-        datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
+    # train_dataset = Dataset.from_dict(load_ds_to_dict("data/train.labeled"))
+    train_dataset = Dataset.from_dict(train_ds)
+    validation_dataset = Dataset.from_dict(val_ds)
+    datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
 
-        model = get_model(
-            model_checkpoint="t5-base",
-            datasets=datasets,
-            source_lang="de",
-            target_lang="en",
-            fold_num=i
-        )
+    model = get_model(
+        model_checkpoint="t5-base",
+        datasets=datasets,
+        source_lang="de",
+        target_lang="en"
+    )
 
 
 def main():
