@@ -134,9 +134,9 @@ def load_parsed_ds(file_path):
 
 
 def train():
-    train_path = 'data/data_for_training/train_ds_dependency_parsed.json'
+    train_path = 'data/data_for_training/train_dependency_parsed.json'
     train_ds = load_parsed_ds(train_path)
-    val_path = 'data/data_for_training/val_ds_dependency_parsed.json'
+    val_path = 'data/data_for_training/val_dependency_parsed.json'
     val_ds = load_parsed_ds(val_path)
     if use_kfold:
         complete_ds = train_ds['translation'] + val_ds['translation']
@@ -176,8 +176,8 @@ def train():
             datasets = None
             wandb.finish()
     else:
-        train_dataset = Dataset.from_dict({'translation': train_ds})
-        validation_dataset = Dataset.from_dict({'translation': val_ds})
+        train_dataset = Dataset.from_dict(train_ds)
+        validation_dataset = Dataset.from_dict(val_ds)
 
         datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
         wandb.init(project=run_name, name=f'original train validation split')
