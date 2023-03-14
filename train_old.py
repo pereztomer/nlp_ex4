@@ -1,5 +1,3 @@
-import os
-
 from datasets.arrow_dataset import Dataset
 from datasets.dataset_dict import DatasetDict
 from transformers import (AutoTokenizer,
@@ -10,29 +8,31 @@ from transformers import (AutoTokenizer,
 from datasets import load_metric
 import numpy as np
 import wandb
+from load_ds import load_ds_to_dict
 import json
 from sklearn.model_selection import KFold
 
 # hyper parameters:
 model_name = 't5-base'
-max_seq_len = 250
-run_name = f'{model_name}_{max_seq_len}_max_seq_len_w_modifiers_roots_hw3'
+max_seq_len = 50
+run_name = f'{model_name}_{max_seq_len}_max_seq_len_short_sentences'
 prefix = "translate German to English: "
 epochs = 25
 batch_size = 4
-use_kfold = False
-use_extra_ds = False
 
 
-def get_model(model_checkpoint, datasets, source_lang, target_lang, model_path):
+wandb.init(project=run_name)
+
+
+def get_model(model_checkpoint, datasets, source_lang, target_lang, fold_num):
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
     metric = load_metric("sacrebleu")
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)
 
+    model_name = model_checkpoint.split("/")[-1]
     args = Seq2SeqTrainingArguments(
-        model_path,
-        gradient_accumulation_steps=2,
+        f'{run_name}/fold_{fold_num}',
         save_strategy='epoch',
         logging_strategy="epoch",
         evaluation_strategy="epoch",
@@ -43,7 +43,7 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, model_path):
         save_total_limit=epochs,
         num_train_epochs=epochs,
         predict_with_generate=True,
-        fp16=True,
+        fp16=False,
         push_to_hub=False,
         report_to="wandb"
     )
@@ -107,13 +107,15 @@ def get_model(model_checkpoint, datasets, source_lang, target_lang, model_path):
     )
 
     trainer.train()
+    return model
 
 
 def load_parsed_ds(file_path):
     ds = json.load(open(file_path))
     out_ds = []
     for val in ds:
-        new_dict = {'en': val['en']}
+        new_dict = {}
+        new_dict['en'] = val['en']
 
         intro_sen = ''
         for value in val['parsing_tree']:
@@ -135,65 +137,34 @@ def load_parsed_ds(file_path):
 
 
 def train():
-    train_path = 'data/data_for_training/train_dependency_parsed.json'
+    train_path = './new_data/data_for_training/train_ds_dependency_parsed.json'
     train_ds = load_parsed_ds(train_path)
-    val_path = 'data/data_for_training/val_dependency_parsed.json'
+    val_path = './new_data/data_for_training/val_ds_dependency_parsed.json'
     val_ds = load_parsed_ds(val_path)
-    extra_ds_path = 'data/data_for_training/extra_ds_dependency_parsed.json'
-    extra_ds = load_parsed_ds(extra_ds_path)
-    if use_extra_ds:
-        train_ds['translation'] = train_ds['translation'] + extra_ds['translation']
-    if use_kfold:
-        complete_ds = train_ds['translation'] + val_ds['translation']
+    complete_ds = train_ds['translation'] + val_ds['translation']
 
-        kf = KFold(n_splits=5, random_state=500, shuffle=True)
-        for i, (train_index, val_index) in enumerate(kf.split(complete_ds)):
-            print(f"Fold {i}:")
-            train_ds = []
-            for index in train_index:
-                train_ds.append(complete_ds[index])
-            val_ds = []
-            for index in val_index:
-                val_ds.append(complete_ds[index])
-
-            os.makedirs(f'kfold/{run_name}/fold_{i}', exist_ok=True)
-
-            with open(f'kfold/{run_name}/fold_{i}/train.json', "w") as outfile:
-                outfile.write(json.dumps(train_ds, indent=4))
-
-            with open(f'kfold/{run_name}/fold_{i}/val.json', "w") as outfile:
-                outfile.write(json.dumps(val_ds, indent=4))
-
-            train_dataset = Dataset.from_dict({'translation': train_ds})
-            validation_dataset = Dataset.from_dict({'translation': val_ds})
-
-            datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
-            wandb.init(project=run_name, name=f'fold_{i}')
-
-            get_model(
-                model_checkpoint="t5-base",
-                datasets=datasets,
-                source_lang="de",
-                target_lang="en",
-                model_path=f'models/{run_name}/fold_{i}')
-            train_dataset = None
-            validation_dataset = None
-            datasets = None
-            wandb.finish()
-    else:
-        train_dataset = Dataset.from_dict(train_ds)
-        validation_dataset = Dataset.from_dict(val_ds)
-
+    kf = KFold(n_splits=5, random_state=500, shuffle=True)
+    for i, (train_index, val_index) in enumerate(kf.split(complete_ds)):
+        print(f"Fold {i}:")
+        train_ds = []
+        for index in train_index:
+            train_ds.append(complete_ds[index])
+        val_ds = []
+        for index in val_index:
+            val_ds.append(complete_ds[index])
+        train_ds = train_ds[:500]
+        val_ds = val_ds[:100]
+        train_dataset = Dataset.from_dict({'translation': train_ds})
+        validation_dataset = Dataset.from_dict({'translation': val_ds})
         datasets = DatasetDict({"train": train_dataset, "validation": validation_dataset})
-        wandb.init(project=run_name, name=f'original train validation split')
 
-        get_model(
+        model = get_model(
             model_checkpoint="t5-base",
             datasets=datasets,
             source_lang="de",
             target_lang="en",
-            model_path=f'models/{run_name}/original_split')
-        wandb.finish()
+            fold_num=i
+        )
 
 
 def main():
