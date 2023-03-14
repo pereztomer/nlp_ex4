@@ -5,8 +5,8 @@ from load_ds import load_ds_unlabeled_modifiers
 
 def main():
     model_name = 't5-base_250_max_seq_len_modifiers_train_val_from_model_2'
-    new_file_path = f'new_data/val.labeled_{model_name}'
-    unlabeled_ds = load_ds_unlabeled_modifiers(path='./new_data/val.unlabeled')
+    new_file_path = f'data/val.labeled_{model_name}'
+    unlabeled_ds = load_ds_unlabeled_modifiers(path='data/val.unlabeled')
     for val in unlabeled_ds:
         intro_sen = ''
         new_dict = {}

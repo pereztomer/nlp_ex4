@@ -1,3 +1,5 @@
+import os
+
 import torch
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
@@ -109,7 +111,8 @@ def write_file(file_address, predictions):
 
 
 def main():
-    train_dataset = Dataset.from_dict(load_ds_to_dict("/archive/data/val.labeled"))
+    patent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+    train_dataset = Dataset.from_dict(load_ds_to_dict(f"{patent_dir}/data/train.labeled"))
 
     model = torch.load('comp_model_mlp_ex3').to('cuda')
     sentences_word2idx = model.sentences_word2idx
@@ -153,7 +156,7 @@ def main():
         paragraphs_dict = {'en': eg_paragraph, 'de': ger_paragraph, 'parsing_tree': split_en_paragraph_list}
         generated_samples.append(paragraphs_dict)
 
-    with open("/archive/data/val_dependency_parsed.json", "w") as outfile:
+    with open(f"{patent_dir}/data/data_for_training/train_dependency_parsed.json", "w") as outfile:
         outfile.write(json.dumps(generated_samples, indent=4))
 
 

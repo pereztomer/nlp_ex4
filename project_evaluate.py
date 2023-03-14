@@ -56,5 +56,5 @@ def calculate_score(file_path1, file_path2):
 
 
 if __name__ == '__main__':
-    calculate_score(file_path1='./new_data/val.labeled',
-                    file_path2='new_data/val.labeled_t5-base_250_max_seq_len_modifiers_train_val_from_model_2')
+    calculate_score(file_path1='data/val.labeled',
+                    file_path2='data/val.labeled_t5-base_250_max_seq_len_modifiers_train_val_from_model_2')

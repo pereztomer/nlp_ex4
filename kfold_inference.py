@@ -28,6 +28,13 @@ def main():
         for val in translations:
             english_translations.append(val['translation_text'])
 
+        fold_results = list(zip(ger_sentences_for_translation,
+                                english_translations,
+                                original_eng_sentences_list))
+
+        with open(f"kfold/{model_name}/fold_{index}/fold_results.json", "w") as outfile:
+            outfile.write(json.dumps(fold_results, indent=4))
+
         metric = evaluate.load("sacrebleu")
         result = metric.compute(predictions=original_eng_sentences_list,
                                 references=english_translations)
